@@ -9,6 +9,14 @@
 -export([eql/1, include/1, be_true/0, be_undefined/0, be_a_globally_registered_name/0, find_matcher/2]).
 
 %%
+%% Macros
+%%
+
+-define(LHS(ETB), espec_test_binding:lhs(ETB)).
+-define(LHS_STR(ETB), espec_test_binding:lhs_string(ETB)).
+
+
+%%
 %% API Functions
 %%
 
@@ -26,8 +34,8 @@ find_matcher(Fun_Name, Mod_name) ->
 
 eql(A) ->
     fun(Test_binding) ->
-      Lhs_val = espec_verbs:extract_lhs_val(Test_binding),
-      Lhs_string_val = espec_verbs:extract_lhs_string_val(Test_binding),
+      Lhs_val = ?LHS(Test_binding),
+      Lhs_string_val = ?LHS_STR(Test_binding),
       #especMatcherResult{
        test_result = ( A == Lhs_val ),
        failure_message = ?L_STR(
@@ -47,8 +55,8 @@ eql(A) ->
 
 include(A) ->
     fun(Test_binding) ->
-      Lhs_val = espec_verbs:extract_lhs_val(Test_binding),
-      Lhs_string_val = espec_verbs:extract_lhs_string_val(Test_binding),
+      Lhs_val = ?LHS(Test_binding),
+      Lhs_string_val = ?LHS_STR(Test_binding),
       #especMatcherResult{
        test_result = val_is_list_member(A, Lhs_val ),
        failure_message = ?L_STR(
@@ -68,8 +76,8 @@ include(A) ->
 
 be_undefined() -> 
    fun(Test_binding) ->
-    Lhs_val = espec_verbs:extract_lhs_val(Test_binding),
-    Lhs_string_val = espec_verbs:extract_lhs_string_val(Test_binding),
+    Lhs_val = ?LHS(Test_binding),
+    Lhs_string_val = ?LHS_STR(Test_binding),
       #especMatcherResult{
        test_result = (undefined == Lhs_val),
        failure_message = ?L_STR(
@@ -88,8 +96,8 @@ be_undefined() ->
 
 be_a_globally_registered_name() -> 
    fun(Test_binding) ->
-    Lhs_val = espec_test_binding:lhs(Test_binding),
-    Lhs_string_val = espec_verbs:extract_lhs_string_val(Test_binding),
+    Lhs_val = ?LHS(Test_binding),
+    Lhs_string_val = ?LHS_STR(Test_binding),
       #especMatcherResult{
        test_result = (true == lists:member(Lhs_val, global:registered_names())),
        failure_message = ?L_STR(
@@ -107,8 +115,8 @@ be_a_globally_registered_name() ->
 
 be_true() -> 
     fun(Test_binding) ->
-      Lhs_val = espec_verbs:extract_lhs_val(Test_binding),
-      Lhs_string_val = espec_verbs:extract_lhs_string_val(Test_binding),
+      Lhs_val = ?LHS(Test_binding),
+      Lhs_string_val = ?LHS_STR(Test_binding),
       matcher_result(
        (true == Lhs_val),
        ?L_STR(

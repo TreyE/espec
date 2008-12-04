@@ -11,14 +11,6 @@
 %%
 %% Test Matchers
 %%
--define(L_FETCH(Key, List), dict:fetch(Key, dict:from_list(List))).
-
--define(RUNTIME_MESSAGE_FORMAT,
-  {
-    {ok, '$1'},
-    [{is_list, '$1'}]
-  }
-).
 
 be_implemented_in(Mod_name) ->
     fun(Test_binding) ->

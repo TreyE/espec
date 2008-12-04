@@ -11,9 +11,6 @@
 %%
 -export([should_not/1, should/1]).
 
-%% Record value extraction functions
--export([extract_lhs_val/1, extract_lhs_string_val/1, extract_rhs_val/1, extract_rhs_string_val/1]).
-
 %%
 %% API Functions
 %%
@@ -44,8 +41,3 @@ should(TB) ->
 
 passed(Val) ->
   Val#especMatcherResult.test_result.
-
-extract_lhs_val(TB) -> TB#especTestBinding.lhs_val.
-extract_rhs_val(TB) -> TB#especTestBinding.rhs_val.
-extract_lhs_string_val(TB) -> TB#especTestBinding.lhs_string_val.
-extract_rhs_string_val(TB) -> TB#especTestBinding.rhs_string_val.
