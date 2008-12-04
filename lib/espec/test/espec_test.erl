@@ -7,7 +7,6 @@
 %%
 -include("espec.hrl").
 -include("espec_common.hrl").
--compile(nowarn_unused_vars).
 
 %%
 %% Test Matchers
@@ -23,8 +22,8 @@
 
 be_implemented_in(Mod_name) ->
     fun(Test_binding) ->
-      Lhs_val = espec_verbs:extract_lhs_val(Test_binding),
-      Lhs_string_val = espec_verbs:extract_lhs_string_val(Test_binding),
+      Lhs_val = espec_test_binding:lhs(Test_binding),
+      Lhs_string_val = espec_test_binding:lhs_string(Test_binding),
     B = lists:append(
          [Mod_name],
          lists:map(

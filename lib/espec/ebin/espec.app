@@ -10,6 +10,7 @@
               espec_formatter,
               espec_matchers,
               espec_runner,
+              espec_test_binding,
               espec_verbs,
               sin_es_build,
               sin_espec

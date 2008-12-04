@@ -8,15 +8,15 @@
 
 -define(_specify(A, B, C, Test_Context),
         ((fun () ->
-            Vals = #especTestBinding{
-               lhs_val = A,
-               rhs_val =  espec_matchers:find_matcher(
+            Vals = espec_test_binding:new(
+               A,
+               espec_matchers:find_matcher(
                  C,
                  dict:fetch(module, Test_Context)
                 ),
-               lhs_string_val = ??A,
-               rhs_string_val = ??C                                              
-            },
+               ??A,
+               ??C                                              
+            ),
             M = dict:fetch(module, Test_Context),
             L = dict:fetch(line, Test_Context),
             R = espec_verbs:B(Vals),
