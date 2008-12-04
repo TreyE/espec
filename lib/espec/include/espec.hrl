@@ -3,7 +3,7 @@
 
 -define(TEST, true).
 -include_lib("eunit/include/eunit.hrl").
--include("include/espec_records.hrl").
+-include("espec_records.hrl").
 -import(espec_matchers, [include/1, eql/1, be_true/0, be_undefined/0]).
 
 -define(_specify(A, B, C, Test_Context),

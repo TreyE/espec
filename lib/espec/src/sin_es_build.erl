@@ -222,6 +222,7 @@ build_app(BuildRef, Env, AppName, Args) ->
     sin_build_config:store(BuildRef, "apps." ++ AppName ++ ".builddir",
                            AppBuildDir),
     Target = filename:join([AppBuildDir, "ebin"]),
+    TestDir = filename:join([AppDir, "test"]),
     SrcDir = filename:join([AppDir, "src"]),
     {EbinPaths, Includes} = setup_code_path(BuildRef, Env, AppName),
     sin_build_config:store(BuildRef, "apps." ++ AppName ++ ".code_paths",
@@ -232,7 +233,9 @@ build_app(BuildRef, Env, AppName, Args) ->
     Ignorables = sin_build_config:get_value(BuildRef, "ignore_dirs", []),
     sin_utils:copy_dir(AppBuildDir, AppDir, "", Ignorables),
     code:add_patha(Target),
-    Modules = gather_modules(BuildRef, AppName, SrcDir),
+    AppModules = gather_modules(BuildRef, AppName, SrcDir),
+    TestModules = gather_test_modules(BuildRef, TestDir),
+    Modules = AppModules ++ TestModules,
     NModules = lists:map(fun({File, _AbsName, Ext}) ->
                                  build_file(BuildRef, SrcDir, File, Ext,
                                             Options, Target)
@@ -362,6 +365,19 @@ gather_modules(BuildRef, AppName, SrcDir) ->
                            Ext = filename:extension(File),
                            [{File, module_name(File), Ext} | Acc]
                    end, []),
+    reorder_list(BuildRef, ModuleList,
+                 filter_file_list(BuildRef, FileList, ModuleList)).
+
+gather_test_modules(BuildRef, TestDir) ->
+    FileList =
+        filelib:fold_files(TestDir,
+                           "(.+\.erl|.+\.yrl|.+\.asn1)$",
+                   false,
+                   fun(File, Acc) ->
+                           Ext = filename:extension(File),
+                           [{File, module_name(File), Ext} | Acc]
+                   end, []),
+    ModuleList = lists:map(fun(X) -> element(2, X) end, FileList),
     reorder_list(BuildRef, ModuleList,
                  filter_file_list(BuildRef, FileList, ModuleList)).
 
