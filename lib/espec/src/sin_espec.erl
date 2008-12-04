@@ -113,8 +113,13 @@ espec(BuildRef) ->
 %%--------------------------------------------------------------------
 test_apps(BuildRef, [AppName | T]) ->
     io:format("Testing ~s~n", [AppName]),
-    Modules = sin_build_config:get_value(BuildRef,
+    AppModules = sin_build_config:get_value(BuildRef,
                               "apps." ++ AppName ++ ".modules"),
+    AppDir = sin_build_config:get_value(BuildRef, "apps." ++ AppName 
+               ++ ".basedir"),
+    TestDir = filename:join([AppDir, "test"]),
+    TestModules = gather_test_modules(TestDir),
+    Modules = AppModules ++ TestModules,
     case Modules == undefined orelse length(Modules) =< 0 of
         true ->
             eta_event:task_fault(BuildRef, ?TASK,
@@ -128,6 +133,17 @@ test_apps(BuildRef, [AppName | T]) ->
 test_apps(_, []) ->
     ok.
 
+
+gather_test_modules(TestDir) ->
+        filelib:fold_files(TestDir,
+                           "(.+\.erl|.+\.yrl|.+\.asn1)$",
+                   false,
+                   fun(File, Acc) ->
+                           [module_name(File) | Acc]
+                   end, []).
+
+module_name(File) ->
+    list_to_atom(filename:rootname(filename:basename(File))).
 
 %%--------------------------------------------------------------------
 %% @doc
