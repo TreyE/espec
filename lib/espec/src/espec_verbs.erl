@@ -12,11 +12,16 @@
 -export([should_not/1, should/1]).
 
 %%
+%% Macros
+%%
+-define(RHS(TB), espec_test_binding:rhs(TB)).
+
+%%
 %% API Functions
 %%
 
 should_not(TB) ->
-    C = TB#especTestBinding.rhs_val, 
+    C = ?RHS(TB), 
     R = C(TB),
     TR = (not passed(R)),
     case (TR) of
@@ -28,7 +33,7 @@ should_not(TB) ->
      end.
 
 should(TB) ->
-    C = TB#especTestBinding.rhs_val, 
+    C = ?RHS(TB), 
     R = C(TB),
     TR = passed(R),      
     case (TR) of
