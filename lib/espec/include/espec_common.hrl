@@ -1,0 +1,5 @@
+-ifndef(ESPEC_COMMON_HRL).
+-define(ESPEC_COMMON_HRL, true).
+-define(L_STR(Lst), lists:concat(Lst)).
+-define(R_DICT(A, B, C), dict:from_list([{success, (A)}, {expectation, B}, {failure_reason, C}])).
+-endif.
