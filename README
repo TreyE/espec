@@ -1,0 +1,26 @@
+===== ESpec =====
+(C) 2008-2009 Lewis R. Evans IV
+
+A more sensible unit testing framework for erlang.
+
+First and foremost, it's important to note that this uses Erlware.org's Sinan,
+so if you want to be able to build/install it, you will need Faxien and Sinan
+installed.
+
+Mainly, once you've built and installed the release, you should be able to
+run ESpec on any of your projects by simply changing to the project's directory and running the 'espec' command.
+
+=== How does this differ from EUnit? ===
+
+Without going into the details of the new testing macros and functionality
+provided, what ESpec mainly does is separate your tests from your production
+code, allowing you to now have test suites that don't need to be embedded in
+the module you're testing.  This allows you to test as a client of the module,
+evaluating the behaviour of it's interface - rather than testing it's internal
+functions.  This is a major point of good TDD - it forces you to create code
+that is not a tangled mess of dependencies.
+
+=== How do I write a new test? ===
+
+You write tests on an app-by-app basis.  Sinan already divides your release into different applications (usually in the 'lib' dir of your project).  In each applications directory you have the usual folders: 'ebin', 'include', 'src', etc.
+All you need to do is create a new directory called 'test', and put your test modules in it.  Make sure your test modules include 'espec.hrl' - and that's it - espec will do the rest.
