@@ -235,12 +235,13 @@ build_app(BuildRef, Env, AppName, Args) ->
     code:add_patha(Target),
     AppModules = gather_modules(BuildRef, AppName, SrcDir),
     TestModules = gather_test_modules(BuildRef, TestDir),
+%% This section is wrong, it needs to be fixed so that the srcdir is properly applied.
     Modules = AppModules ++ TestModules,
-    NModules = lists:map(fun({File, _AbsName, Ext}) ->
+    NAModules = lists:map(fun({File, _AbsName, Ext}) ->
                                  build_file(BuildRef, SrcDir, File, Ext,
                                             Options, Target)
                          end, Modules),
-    check_for_errors(NModules),
+    check_for_errors(NAModules),
     sin_utils:remove_code_paths([Target | EbinPaths]).
 
 
@@ -369,17 +370,13 @@ gather_modules(BuildRef, AppName, SrcDir) ->
                  filter_file_list(BuildRef, FileList, ModuleList)).
 
 gather_test_modules(BuildRef, TestDir) ->
-    FileList =
         filelib:fold_files(TestDir,
                            "(.+\.erl|.+\.yrl|.+\.asn1)$",
                    false,
                    fun(File, Acc) ->
                            Ext = filename:extension(File),
                            [{File, module_name(File), Ext} | Acc]
-                   end, []),
-    ModuleList = lists:map(fun(X) -> element(2, X) end, FileList),
-    reorder_list(BuildRef, ModuleList,
-                 filter_file_list(BuildRef, FileList, ModuleList)).
+                   end, []).
 
 %%--------------------------------------------------------------------
 %% @doc
