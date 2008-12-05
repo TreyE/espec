@@ -1,4 +1,7 @@
 %% -*- mode: Erlang; fill-column: 132; comment-column: 118; -*-
+
+% TODO: Properly attribute and describe this module.
+
 %%%-------------------------------------------------------------------
 %%% Copyright (c) 2006, 2007 Erlware
 %%%

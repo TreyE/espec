@@ -1,0 +1,5 @@
+Overall project TODO list:
+- Attribute all modules properly.
+- Include better description in the README of how to use espec.
+- Add more matchers.
+- Write 'HOWTO' on how to write your own matchers.
