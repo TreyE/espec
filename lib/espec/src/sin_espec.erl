@@ -89,13 +89,13 @@ espec(BuildRef) ->
                                  "value of the build config from 'disabled' to "
                                  "'enabled' or remove it.");
         _ ->
-            GL = sin_group_leader:capture_start(BuildRef, ?TASK),
+            %% GL = sin_group_leader:capture_start(BuildRef, ?TASK),
             Apps = lists:map(fun({App, _Vsn, _Deps}) ->
                                      atom_to_list(App)
                              end, sin_build_config:get_value(BuildRef,
                                                   "project.apps")),
-            test_apps(BuildRef, Apps),
-            sin_group_leader:capture_stop(GL)
+            test_apps(BuildRef, Apps)
+            %% sin_group_leader:capture_stop(GL)
 
     end,
     eta_event:task_stop(BuildRef, ?TASK).
@@ -277,7 +277,7 @@ output_code_coverage(_, _DocDir, [], Acc) ->
 %% @private
 %%--------------------------------------------------------------------
 run_module_tests(BuildRef,[Module | T]) ->
-    io:format("~p:",[Module]),
+    io:format("Testing: ~p~n",[Module]),
     eunit:test(Module),
     run_module_tests(BuildRef, T);
 run_module_tests(_BuildRef,[]) ->
