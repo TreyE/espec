@@ -1,5 +1,6 @@
 Overall project TODO list:
 - Attribute all modules properly.
 - Include better description in the README of how to use espec.
+  This is esp. true for how you can still use eunit in espec modules.
 - Add more matchers.
 - Write 'HOWTO' on how to write your own matchers.
