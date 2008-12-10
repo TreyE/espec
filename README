@@ -28,3 +28,6 @@ ESpec offers two things EUnit doesn't:
 
 You write tests on an app-by-app basis.  Sinan already divides your release into different applications (usually in the 'lib' dir of your project).  In each applications directory you have the usual folders: 'ebin', 'include', 'src', etc.
 All you need to do is create a new directory called 'test', and put your test modules in it.  Make sure your test modules include 'espec.hrl' - and that's it - espec will do the rest.
+
+For an example that ESpec actually uses to test itself - check out:
+ lib/espec/test/espec_test.erl
