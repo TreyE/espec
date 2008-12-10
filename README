@@ -8,17 +8,21 @@ so if you want to be able to build/install it, you will need Faxien and Sinan
 installed.
 
 Mainly, once you've built and installed the release, you should be able to
-run ESpec on any of your projects by simply changing to the project's directory and running the 'espec' command.
+run ESpec on any of your projects by simply changing to the project's directory
+and running the 'espec' command.
 
-=== How does this differ from EUnit? ===
+=== How does this differ from EUnit? Does it replace EUnit? ===
 
-Without going into the details of the new testing macros and functionality
-provided, what ESpec mainly does is separate your tests from your production
-code, allowing you to now have test suites that don't need to be embedded in
-the module you're testing.  This allows you to test as a client of the module,
-evaluating the behaviour of it's interface - rather than testing it's internal
-functions.  This is a major point of good TDD - it forces you to create code
-that is not a tangled mess of dependencies.
+All your eunit tests will still work - it doesn't replace EUnit.  One of the
+major goals of the project is 100% compatability with EUnit - this isn't going
+to change.  Also, feel free to mix and match.  Your test modules can contain
+EUnit type tests - and they'll work just the same as normal.
+
+ESpec offers two things EUnit doesn't:
+- Currently Sinan doesn't support separate test modules in the 'test' directory
+  ESpec fixes that.
+- The ?specify macro - which allows you to design tests which are more semantic
+  and clearer in intent - with more descriptive failure messages.
 
 === How do I write a new test? ===
 
