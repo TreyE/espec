@@ -1,8 +1,8 @@
 %% This is the application resource file (.app file) for the espec,
 %% application.
 {application, espec, 
-  [{description, "Your Desc HERE"},
-   {vsn, "0.1.0"},
+  [{description, "ESpec Application"},
+   {vsn, "0.1.0.1"},
    {modules, [
               espec,
               espec_formatter,
