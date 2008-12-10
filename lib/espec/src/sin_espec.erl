@@ -93,7 +93,7 @@ espec(BuildRef) ->
                                  "'enabled' or remove it.");
         _ ->
             %% GL = sin_group_leader:capture_start(BuildRef, ?TASK),
-            Apps = lists:map(fun({App, _Vsn, _Deps}) ->
+            Apps = lists:map(fun({App, _Vsn, _Deps, _}) ->
                                      atom_to_list(App)
                              end, sin_build_config:get_value(BuildRef,
                                                   "project.apps")),
@@ -118,7 +118,7 @@ test_apps(BuildRef, [AppName | T]) ->
     io:format("Testing ~s~n", [AppName]),
     AppModules = sin_build_config:get_value(BuildRef,
                               "apps." ++ AppName ++ ".modules"),
-    AppDir = sin_build_config:get_value(BuildRef, "apps." ++ AppName 
+    AppDir = sin_build_config:get_value(BuildRef, "apps." ++ AppName
                ++ ".basedir"),
     TestDir = filename:join([AppDir, "test"]),
     TestModules = gather_test_modules(TestDir),

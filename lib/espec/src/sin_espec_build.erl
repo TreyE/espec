@@ -1,26 +1,35 @@
 %% -*- mode: Erlang; fill-column: 132; comment-column: 118; -*-
-
-% TODO: Properly edoc this module.
-
-%%%-------------------------------------------------------------------
-%%% Copyright (c) 2008-2009 Lewis R. Evans IV
-%%%-------------------------------------------------------------------
 %%%-------------------------------------------------------------------
 %%% Copyright (c) 2006, 2007 Erlware
-%%%-------------------------------------------------------------------
+%%%
+%%% Permission is hereby granted, free of charge, to any
+%%% person obtaining a copy of this software and associated
+%%% documentation files (the "Software"), to deal in the
+%%% Software without restriction, including without limitation
+%%% the rights to use, copy, modify, merge, publish, distribute,
+%%% sublicense, and/or sell copies of the Software, and to permit
+%%% persons to whom the Software is furnished to do so, subject to
+%%% the following conditions:
 %%%
 %%% The above copyright notice and this permission notice shall
 %%% be included in all copies or substantial portions of the Software.
 %%%
+%%% THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+%%% EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+%%% OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+%%% NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+%%% HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+%%% WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+%%% OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+%%% OTHER DEALINGS IN THE SOFTWARE.
 %%%---------------------------------------------------------------------------
-%%% @author Lewis R. Evans IV
+%%% @author Eric Merritt
 %%% @doc
-%%%  Supports building individual erl files in an application, as well as the
-%%%  modules in the application's 'test' directory.
+%%%  Supports building individual erl files in an application
 %%% @end
-%%% @copyright (C) 2008-2009, Lewis R. Evans IV 
+%%% @copyright (C) 2007, Erlware
 %%%--------------------------------------------------------------------------
--module(sin_es_build).
+-module(sin_espec_build).
 
 -behaviour(eta_gen_task).
 
@@ -42,7 +51,7 @@
                repo}).
 
 -define(TASK, espec_build).
--define(DEPS, [check_depends]).
+-define(DEPS, [depends]).
 
 
 
@@ -105,14 +114,14 @@ espec_build(BuildRef) ->
 %%--------------------------------------------------------------------
 reorder_apps_according_to_deps(AllApps) ->
     ReOrdered = lists:foldr(
-		  fun ({App, _, {Deps, _}}, Acc) ->
-			  case map_deps(App, Deps, AllApps) of
-			      [] ->
-				  [{'NONE', to_list(App)} | Acc];
-			      Else ->
-				  Else ++ Acc
-			  end
-		  end, [], AllApps),
+                  fun ({App, _, Deps, _}, Acc) ->
+                          case map_deps(App, Deps, AllApps) of
+                              [] ->
+                                  [{'NONE', to_list(App)} | Acc];
+                              Else ->
+                                  Else ++ Acc
+                          end
+                  end, [], AllApps),
     case eta_topo:sort(ReOrdered) of
         {ok, DepList} ->
             DepList;
@@ -132,14 +141,14 @@ reorder_apps_according_to_deps(AllApps) ->
 %% @private
 %%--------------------------------------------------------------------
 map_deps(App, Deps, AllApps) ->
- 	 lists:foldr(fun (DApp, Acc) ->
- 			     case lists:keymember(DApp, 1, AllApps) of
- 				 true ->
- 				     [{to_list(DApp), to_list(App)} | Acc];
- 				 false ->
- 				     Acc
- 			     end
- 		     end, [], Deps).
+         lists:foldr(fun (DApp, Acc) ->
+                             case lists:keymember(DApp, 1, AllApps) of
+                                 true ->
+                                     [{to_list(DApp), to_list(App)} | Acc];
+                                 false ->
+                                     Acc
+                             end
+                     end, [], Deps).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -190,12 +199,12 @@ build_apps(BuildRef, Apps, Args) ->
 %%--------------------------------------------------------------------
 build_apps(BuildRef, BuildSupInfo, AppList, Args) ->
     lists:foreach(fun ('NONE') ->
-			  %% We ignore an app type of none, its a remnent
-			  %% of the reorder process.
-			  ok;
-		      (App) ->
-			  build_app(BuildRef, BuildSupInfo, App, Args)
-		  end, AppList).
+                          %% We ignore an app type of none, its a remnent
+                          %% of the reorder process.
+                          ok;
+                      (App) ->
+                          build_app(BuildRef, BuildSupInfo, App, Args)
+                  end, AppList).
 
 %%-------------------------------------------------------------------
 %% @doc
@@ -213,7 +222,6 @@ build_app(BuildRef, Env, AppName, Args) ->
     sin_build_config:store(BuildRef, "apps." ++ AppName ++ ".builddir",
                            AppBuildDir),
     Target = filename:join([AppBuildDir, "ebin"]),
-    TestDir = filename:join([AppDir, "test"]),
     SrcDir = filename:join([AppDir, "src"]),
     {EbinPaths, Includes} = setup_code_path(BuildRef, Env, AppName),
     sin_build_config:store(BuildRef, "apps." ++ AppName ++ ".code_paths",
@@ -224,15 +232,12 @@ build_app(BuildRef, Env, AppName, Args) ->
     Ignorables = sin_build_config:get_value(BuildRef, "ignore_dirs", []),
     sin_utils:copy_dir(AppBuildDir, AppDir, "", Ignorables),
     code:add_patha(Target),
-    AppModules = gather_modules(BuildRef, AppName, SrcDir),
-    TestModules = gather_test_modules(BuildRef, TestDir),
-%% This section is wrong, it needs to be fixed so that the srcdir is properly applied.
-    Modules = AppModules ++ TestModules,
-    NAModules = lists:map(fun({File, _AbsName, Ext}) ->
+    Modules = gather_modules(BuildRef, AppName, SrcDir),
+    NModules = lists:map(fun({File, _AbsName, Ext}) ->
                                  build_file(BuildRef, SrcDir, File, Ext,
                                             Options, Target)
                          end, Modules),
-    check_for_errors(NAModules),
+    check_for_errors(NModules),
     sin_utils:remove_code_paths([Target | EbinPaths]).
 
 
@@ -244,10 +249,10 @@ build_app(BuildRef, Env, AppName, Args) ->
 %%--------------------------------------------------------------------
 check_for_errors(ModuleList) ->
     case lists:member({sinan, error}, ModuleList) of
-	true ->
-	    ?ETA_RAISE(build_errors);
-	false ->
-	    ok
+        true ->
+            ?ETA_RAISE(build_errors);
+        false ->
+            ok
     end.
 
 %%--------------------------------------------------------------------
@@ -265,7 +270,7 @@ setup_code_path(BuildRef, Env, AppName) ->
                          "App ~s is not in the list of project apps. "
                          "This shouldn't happen!!",
                          [AppName]);
-        {_, _, {Deps, _}} ->
+        {_, _, Deps, _} ->
             case sin_build_config:get_value(BuildRef, "eunit") of
                 "disabled" ->
                     extract_info_from_deps(BuildRef, Deps, Env#env.app_list,
@@ -315,13 +320,13 @@ extract_info_from_deps(_, [], _AppList, _Repo, _AppBDir, _Deps, Acc, IAcc) ->
 
 get_vsn(App, DepList) ->
     case lists:keysearch(App, 1, DepList) of
-	{value,{App, Vsn}} ->
-	    Vsn;
-	false ->
-	    ?ETA_RAISE_DA(miss_app,
-			  "Unable to get the version for ~w. This "
-			  "shouldn't happen!",
-			  [App])
+        {value,{App, Vsn, _, _}} ->
+            Vsn;
+        false ->
+            ?ETA_RAISE_DA(miss_app,
+                          "Unable to get the version for ~w. This "
+                          "shouldn't happen!",
+                          [App])
     end.
 
 %%--------------------------------------------------------------------
@@ -333,10 +338,10 @@ get_vsn(App, DepList) ->
 %%--------------------------------------------------------------------
 get_app_from_list(App, AppList) ->
     case lists:keysearch(App, 1, AppList) of
-	{value, Entry} ->
-	    Entry;
-	false ->
-	    not_in_list
+        {value, Entry} ->
+            Entry;
+        false ->
+            not_in_list
     end.
 
 %%--------------------------------------------------------------------
@@ -360,15 +365,6 @@ gather_modules(BuildRef, AppName, SrcDir) ->
     reorder_list(BuildRef, ModuleList,
                  filter_file_list(BuildRef, FileList, ModuleList)).
 
-gather_test_modules(BuildRef, TestDir) ->
-        filelib:fold_files(TestDir,
-                           "(.+\.erl|.+\.yrl|.+\.asn1)$",
-                   false,
-                   fun(File, Acc) ->
-                           Ext = filename:extension(File),
-                           [{File, module_name(File), Ext} | Acc]
-                   end, []).
-
 %%--------------------------------------------------------------------
 %% @doc
 %%  Extract the module name from the file name.
@@ -389,22 +385,22 @@ module_name(File) ->
 %%--------------------------------------------------------------------
 reorder_list(BuildRef, ModList, FileList) ->
     Res = lists:foldr(
-	    fun (Mod, {Acc,OkFlag}) ->
-		    case get_file_list(Mod, FileList) of
-			not_in_list ->
-			    eta_event:task_fault(BuildRef, ?TASK,
-						 {"The module specified by ~w is not "
-						  "on the filesystem!! Not building.", [Mod]}),
-			    {Acc, not_ok};
-			Entry ->
-			    {[Entry | Acc], OkFlag}
-		    end
-	    end, {[], ok}, ModList),
+            fun (Mod, {Acc,OkFlag}) ->
+                    case get_file_list(Mod, FileList) of
+                        not_in_list ->
+                            eta_event:task_fault(BuildRef, ?TASK,
+                                                 {"The module specified by ~w is not "
+                                                  "on the filesystem!! Not building.", [Mod]}),
+                            {Acc, not_ok};
+                        Entry ->
+                            {[Entry | Acc], OkFlag}
+                    end
+            end, {[], ok}, ModList),
     case Res of
-	{Acc, ok} ->
-	    lists:reverse(Acc);
-	{_, not_ok} ->
-	    ?ETA_RAISE(build_errors)
+        {Acc, ok} ->
+            lists:reverse(Acc);
+        {_, not_ok} ->
+            ?ETA_RAISE(build_errors)
     end.
 
 %%--------------------------------------------------------------------
@@ -416,10 +412,10 @@ reorder_list(BuildRef, ModList, FileList) ->
 %%--------------------------------------------------------------------
 get_file_list(ModuleName, FileList) ->
     case lists:keysearch(ModuleName, 2, FileList) of
-	{value, Entry} ->
-	    Entry;
-	false ->
-	    not_in_list
+        {value, Entry} ->
+            Entry;
+        false ->
+            not_in_list
     end.
 
 %%--------------------------------------------------------------------
@@ -433,16 +429,16 @@ get_file_list(ModuleName, FileList) ->
 filter_file_list(BuildRef, FileList, ModuleList) ->
     lists:foldr(
       fun ({File, AbsName, _}=Entry, Acc) ->
-	      case lists:member(AbsName, ModuleList) of
-		  true ->
-		      [Entry | Acc];
-		  false ->
-		      eta_event:task_event(BuildRef, ?TASK, module_missing,
-					   {"Module (~w) in file ~s is not in the "
-					    "module list. Removing from build queue.",
-					    [AbsName, File]}),
-		      Acc
-	      end
+              case lists:member(AbsName, ModuleList) of
+                  true ->
+                      [Entry | Acc];
+                  false ->
+                      eta_event:task_event(BuildRef, ?TASK, module_missing,
+                                           {"Module (~w) in file ~s is not in the "
+                                            "module list. Removing from build queue.",
+                                            [AbsName, File]}),
+                      Acc
+              end
       end, [], FileList).
 
 %%-------------------------------------------------------------------
@@ -494,8 +490,8 @@ build_file(BuildRef, File, ".yrl", Options, Target) ->
     case needs_building(File, ".yrl", Target, ".beam") of
         true ->
             ErlFile = filename:basename(File, ".yrl"),
-	    AppDir = filename:dirname(Target),
-	    ErlTarget = filename:join([AppDir,"src"]),
+            AppDir = filename:dirname(Target),
+            ErlTarget = filename:join([AppDir,"src"]),
             ErlName = filename:join([ErlTarget,
                                      lists:flatten([ErlFile, ".erl"])]),
             eta_event:task_event(BuildRef, ?TASK, file_build,
@@ -537,21 +533,21 @@ build_file(BuildRef, File, _, _Options, _Target) ->
 strip_options(Opts) ->
     lists:foldr(
       fun (Opt = {parserfile, _}, Acc) ->
-	      [Opt | Acc];
-	  (Opt = {includefile, _}, Acc) ->
-	      [Opt | Acc];
-	  (Opt = {report_errors, _}, Acc) ->
-	      [Opt | Acc];
-	  (Opt = {report_warnings, _}, Acc) ->
-	      [Opt | Acc];
-	  (Opt = {report, _}, Acc) ->
-	      [Opt | Acc];
-	  (Opt = {return_warnings, _}, Acc) ->
-	      [Opt | Acc];
-	  (Opt = {verbose, _}, Acc) ->
-	      [Opt | Acc];
-	  (_, Acc) ->
-	      Acc
+              [Opt | Acc];
+          (Opt = {includefile, _}, Acc) ->
+              [Opt | Acc];
+          (Opt = {report_errors, _}, Acc) ->
+              [Opt | Acc];
+          (Opt = {report_warnings, _}, Acc) ->
+              [Opt | Acc];
+          (Opt = {report, _}, Acc) ->
+              [Opt | Acc];
+          (Opt = {return_warnings, _}, Acc) ->
+              [Opt | Acc];
+          (Opt = {verbose, _}, Acc) ->
+              [Opt | Acc];
+          (_, Acc) ->
+              Acc
       end, [], Opts).
 
 %%--------------------------------------------------------------------
@@ -594,8 +590,8 @@ ensure_build_dir(BuildRef) ->
 %%-------------------------------------------------------------------
 gather_fail_info(ListOfProblems, Type) ->
     R = lists:foldr(fun ({File, Problems}, Acc) ->
-			    gather_fail_info(File, Problems, Acc, Type)
-		    end, [], ListOfProblems),
+                            gather_fail_info(File, Problems, Acc, Type)
+                    end, [], ListOfProblems),
     lists:reverse(R).
 
 %%-------------------------------------------------------------------
@@ -609,36 +605,36 @@ gather_fail_info(ListOfProblems, Type) ->
 gather_fail_info(File, ListOfProblems, Acc, WoE) ->
     lists:foldr(
       fun ({Line, Type, Detail}, Acc1) when is_atom(Line) ->
-	      [lists:flatten([File, $:, atom_to_list(Line),
-			      $:, WoE, $:, Type:format_error(Detail),
-			      $\n]) | Acc1];
-	  ({Line, Type, Detail}, Acc1) when is_integer(Line) ->
-	      [lists:flatten([File, $:, integer_to_list(Line),
-			      $:, WoE, $:, Type:format_error(Detail),
-			      $\n]) | Acc1];
-	  ({Type, Detail}, Acc1) ->
-	      [lists:flatten([File, ":noline:", WoE, $:,
-			      Type:format_error(Detail), $\n]) | Acc1]
+              [lists:flatten([File, $:, atom_to_list(Line),
+                              $:, WoE, $:, Type:format_error(Detail),
+                              $\n]) | Acc1];
+          ({Line, Type, Detail}, Acc1) when is_integer(Line) ->
+              [lists:flatten([File, $:, integer_to_list(Line),
+                              $:, WoE, $:, Type:format_error(Detail),
+                              $\n]) | Acc1];
+          ({Type, Detail}, Acc1) ->
+              [lists:flatten([File, ":noline:", WoE, $:,
+                              Type:format_error(Detail), $\n]) | Acc1]
       end, Acc, ListOfProblems).
 
 %%====================================================================
 %% Tests
 %%====================================================================
-%% reorder_app_test() ->
-%%     AppList = [{app1, "123", {[app2, stdlib], undefined}},
-%%                {app2, "123", {[app3, kernel], undefined}},
-%%                {app3, "123", {[kernel], undefined}}],
-%%     NewList  = reorder_apps_according_to_deps(AppList),
-%%     ?assertMatch(['NONE', "app3", "app2", "app1"], NewList),
-%%     AppList2 = [{app1, "123", {[app2, zapp1, stdlib], undefined}},
-%%                 {app2, "123", {[app3, kernel], undefined}},
-%%                 {app3, "123", {[kernel], undefined}},
-%%                 {zapp1, "vsn", {[app2, app3, zapp2], undefined}},
-%%                 {zapp2, "vsn", {[kernel], undefined}},
-%%                 {zapp3, "vsn", {[], undefined}}],
-%%     NewList2 = reorder_apps_according_to_deps(AppList2),
-%%     ?assertMatch(['NONE', "zapp2", "app3", "app2", "zapp1", "zapp3", "app1"],
-%%                  NewList2).
+reorder_app_test() ->
+    AppList = [{app1, "123", {[app2, stdlib], undefined}},
+               {app2, "123", {[app3, kernel], undefined}},
+               {app3, "123", {[kernel], undefined}}],
+    NewList  = reorder_apps_according_to_deps(AppList),
+    ?assertMatch(['NONE', "app3", "app2", "app1"], NewList),
+    AppList2 = [{app1, "123", {[app2, zapp1, stdlib], undefined}},
+                {app2, "123", {[app3, kernel], undefined}},
+                {app3, "123", {[kernel], undefined}},
+                {zapp1, "vsn", {[app2, app3, zapp2], undefined}},
+                {zapp2, "vsn", {[kernel], undefined}},
+                {zapp3, "vsn", {[], undefined}}],
+    NewList2 = reorder_apps_according_to_deps(AppList2),
+    ?assertMatch(['NONE', "zapp2", "app3", "app2", "zapp1", "zapp3", "app1"],
+                 NewList2).
 
 
 

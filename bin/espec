@@ -26,7 +26,8 @@ CONFIGFILE=$CONFIGDIR/$REL_NAME-$REL_VSN.config
 if [ ! -f $CONFIGFILE ]; then
 
 echo " [{kernel, [{error_logger, {file, \"$LOGDIR/kernel.log\"}}]}, \
-{sasl,[{sasl_error_logger, {file, \"$LOGDIR/sasl.log\"}}]} ]." > $CONFIGFILE
+{sasl,[{sasl_error_logger, {file, \"$LOGDIR/sasl.log\"}}]},
+{sinan, [{prefix, \"$PREFIX\"}, {erts_version, \"$ERTS_VSN\"]}   ]." > $CONFIGFILE
 
 fi
 
