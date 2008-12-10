@@ -1,33 +1,24 @@
 %% -*- mode: Erlang; fill-column: 132; comment-column: 118; -*-
+
+% TODO: Properly edoc this module.
+
+%%%-------------------------------------------------------------------
+%%% Copyright (c) 2008-2009 Lewis R. Evans IV
+%%%-------------------------------------------------------------------
 %%%-------------------------------------------------------------------
 %%% Copyright (c) 2006, 2007 Erlware
-%%%
-%%% Permission is hereby granted, free of charge, to any
-%%% person obtaining a copy of this software and associated
-%%% documentation files (the "Software"), to deal in the
-%%% Software without restriction, including without limitation
-%%% the rights to use, copy, modify, merge, publish, distribute,
-%%% sublicense, and/or sell copies of the Software, and to permit
-%%% persons to whom the Software is furnished to do so, subject to
-%%% the following conditions:
+%%%-------------------------------------------------------------------
 %%%
 %%% The above copyright notice and this permission notice shall
 %%% be included in all copies or substantial portions of the Software.
 %%%
-%%% THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-%%% EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-%%% OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-%%% NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-%%% HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-%%% WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-%%% OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-%%% OTHER DEALINGS IN THE SOFTWARE.
 %%%---------------------------------------------------------------------------
-%%% @author Eric Merritt
+%%% @author Lewis R. Evans IV
 %%% @doc
-%%%  Supports building individual erl files in an application
+%%%  Supports building individual erl files in an application, as well as the
+%%%  modules in the application's 'test' directory.
 %%% @end
-%%% @copyright (C) 2007, Erlware
+%%% @copyright (C) 2008-2009, Lewis R. Evans IV
 %%%--------------------------------------------------------------------------
 -module(sin_espec_build).
 
@@ -112,9 +103,14 @@ espec_build(BuildRef) ->
 %% @end
 %% @private
 %%--------------------------------------------------------------------
+
 reorder_apps_according_to_deps(AllApps) ->
     ReOrdered = lists:foldr(
-                  fun ({App, _, Deps, _}, Acc) ->
+                  fun (A, Acc) ->
+                      {App, Deps} = case A of
+                                    {Ap, _, Dep, _} -> {Ap, Dep};
+                                    {Ap, _, {Dep, _}} -> {Ap, Dep}
+                                   end,
                           case map_deps(App, Deps, AllApps) of
                               [] ->
                                   [{'NONE', to_list(App)} | Acc];
@@ -223,6 +219,7 @@ build_app(BuildRef, Env, AppName, Args) ->
                            AppBuildDir),
     Target = filename:join([AppBuildDir, "ebin"]),
     SrcDir = filename:join([AppDir, "src"]),
+    TestDir = filename:join([AppDir, "test"]),
     {EbinPaths, Includes} = setup_code_path(BuildRef, Env, AppName),
     sin_build_config:store(BuildRef, "apps." ++ AppName ++ ".code_paths",
                    [Target | EbinPaths]),
@@ -232,7 +229,9 @@ build_app(BuildRef, Env, AppName, Args) ->
     Ignorables = sin_build_config:get_value(BuildRef, "ignore_dirs", []),
     sin_utils:copy_dir(AppBuildDir, AppDir, "", Ignorables),
     code:add_patha(Target),
-    Modules = gather_modules(BuildRef, AppName, SrcDir),
+    AppModules = gather_modules(BuildRef, AppName, SrcDir),
+    TestModules = gather_test_modules(TestDir),
+    Modules = AppModules ++ TestModules,
     NModules = lists:map(fun({File, _AbsName, Ext}) ->
                                  build_file(BuildRef, SrcDir, File, Ext,
                                             Options, Target)
@@ -364,6 +363,15 @@ gather_modules(BuildRef, AppName, SrcDir) ->
                    end, []),
     reorder_list(BuildRef, ModuleList,
                  filter_file_list(BuildRef, FileList, ModuleList)).
+
+gather_test_modules(TestDir) ->
+        filelib:fold_files(TestDir,
+                           "(.+\.erl|.+\.yrl|.+\.asn1)$",
+                   false,
+                   fun(File, Acc) ->
+                           Ext = filename:extension(File),
+                           [{File, module_name(File), Ext} | Acc]
+                   end, []).
 
 %%--------------------------------------------------------------------
 %% @doc
