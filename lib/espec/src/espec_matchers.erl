@@ -6,7 +6,7 @@
 %%
 %% Exported Functions
 %%
--export([eql/1, include/1, be_true/0, be_undefined/0, be_a_globally_registered_name/0, find_matcher/2]).
+-export([eql/1, include/1, be_true/0, be_undefined/0, be_a_globally_registered_name/0, find_matcher/2, raise_error/1]).
 
 %%
 %% Macros
@@ -130,6 +130,32 @@ be_true() ->
            " to be not be true, but was defined as ", ?FORMAT(Lhs_val)
          ])
       )
+    end.
+
+
+raise_error(EType) -> 
+   fun(Test_binding) ->
+    Lhs_val = ?LHS(Test_binding),
+    Lhs_string_val = ?LHS_STR(Test_binding),
+    Successful = case (catch Lhs_val()) of
+      {'EXIT', {EType, _}} -> true;
+      _ -> false
+    end,
+      #especMatcherResult{
+       test_result = Successful,
+       failure_message = ?L_STR(
+         [
+           "Expected ", Lhs_string_val,
+            " to raise an error of type ", ?FORMAT(EType),
+            " but didn't"
+         ]),
+       negative_failure_message = ?L_STR(
+         [
+           "Expected ", Lhs_string_val,
+            " not to raise an error of type ", ?FORMAT(EType),
+            " but did"
+         ])
+      }
     end.
 
 %%
